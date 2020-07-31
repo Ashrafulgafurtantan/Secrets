@@ -6,7 +6,6 @@ const bodyParser = require("body-parser");
 const ejs = require("ejs");
 var lodash = require("lodash");
 const mongoose = require("mongoose");
-
 const session = require("express-session");
 const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose");
@@ -28,11 +27,17 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-mongoose.connect("mongodb://localhost:27017/userDB", {
+const dbUrl =
+  "mongodb+srv://" +
+  process.env.DATABASE_NAME +
+  ":" +
+  process.env.DATABASE_PASSWORD +
+  "@cluster0.1tpuh.mongodb.net/userDB";
+
+mongoose.connect(dbUrl, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
-
 //.........Starting file.............//
 const userSchema = new mongoose.Schema({
   username: {
@@ -81,23 +86,7 @@ passport.use(
     }
   )
 );
-/*
-passport.use(
-  new FacebookStrategy(
-    {
-      clientID: process.env.APP_ID,
-      clientSecret: process.env.APP_SECRET,
-      callbackURL: "http://localhost:3000/auth/facebook/secrets",
-    },
-    function (accessToken, refreshToken, profile, cb) {
-      console.log(profile);
-      User.findOrCreate({ facebookId: profile.id }, function (err, user) {
-        return cb(err, user);
-      });
-    }
-  )
-);
-*/
+
 app.get("/", function (req, res) {
   res.render("home");
 });
@@ -115,17 +104,6 @@ app.get(
     res.redirect("/secrets");
   }
 );
-
-/*app.get("/auth/facebook", passport.authenticate("facebook"));
-
-app.get(
-  "/auth/facebook/secrets",
-  passport.authenticate("facebook", { failureRedirect: "/login" }),
-  function (req, res) {
-    // Successful authentication, redirect home.
-    res.redirect("/secrets");
-  }
-); */
 
 app.get("/submit", function (req, res) {
   if (req.isAuthenticated()) {
@@ -191,7 +169,7 @@ app.post("/login", function (req, res) {
       console.log("error on login");
     } else {
       passport.authenticate("local")(req, res, function () {
-        res.render("secrets");
+        res.redirect("/secrets");
       });
     }
   });
